@@ -9,6 +9,11 @@ from zipfile import ZipFile
 from pathlib import Path
 from pydub import AudioSegment
 
+# with open('./data.json') as file:
+#     settings = json.load(file)
+
+# print(settings)
+
 settings = {
     "gen_type": "mal_user",
     "malName": "AmqPsih",
@@ -240,6 +245,7 @@ def get_songs(data):
             json={"query": query},
             headers=headers
         )
+        response.raise_for_status()
         res = json.loads(response.content)
         shiki_anime = res['data']['animes'][0]
         if shiki_anime['franchise'] in franchises:

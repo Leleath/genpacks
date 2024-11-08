@@ -1,0 +1,41 @@
+﻿{
+    "gen_type": "mal_user",
+    "malName": "AmqPsih",
+    "lists": {
+        "ptw": false,
+        "watching": true,
+        "completed": true,
+        "onhold": false,
+        "dropped": false
+    },
+
+    "rounds": 3,
+    "themes": 6,
+    "questions": 6,
+
+    "animeTypes": {
+        "tv": true,
+        "movie": true,
+        "ova": true,
+        "ona": true,
+        "special": false
+    },
+
+    "openings": {
+        "include": true,
+        "count": 80
+    },
+    "endings": {
+        "include": true,
+        "count": 28
+    },
+    "inserts": {
+        "include": false,
+        "count": 10
+    },
+    
+    "difficulty": {
+        "min": 50,
+        "max": 100
+    }
+}
