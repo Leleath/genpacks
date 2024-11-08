@@ -1,5 +1,5 @@
-﻿{
-    "gen_type": "mal_user",
+{
+    "log": true,
     "malName": "AmqPsih",
     "lists": {
         "ptw": false,
@@ -35,7 +35,7 @@
     },
     
     "difficulty": {
-        "min": 50,
+        "min": 0,
         "max": 100
     }
 }
