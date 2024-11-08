@@ -331,6 +331,7 @@ def gen():
         new_songs.append(songs[i])
         
         debug_log('отобран: {0}'.format(str(songs[i]['annSongId'])))
+        time.sleep(0.3)
 
     debug_log('сонги отобраны, ништяк')
 
