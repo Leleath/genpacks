@@ -83,7 +83,7 @@ def gen():
 
             animes_ids.append(response[i]["anime_id"])
             
-            debug_log('готова проходка: {0} / анимок: {1}'.format(str(offset), str(len(animes_ids))))
+        debug_log('готова проходка: {0} / анимок: {1}'.format(str(offset), str(len(animes_ids))))
 
         offset += 300
     
@@ -306,20 +306,6 @@ def gen():
                 if curr_char > len(new_songs) - 1: 
                     break
                 
-                # out_file = Path("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"])).expanduser()
-                # response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(new_songs[curr_char]["audio"]))
-                # # response.raise_for_status()
-                # # if response.status_code == 200:
-                # with open(out_file, "wb") as fout:
-                #     fout.write(response.content)
-                    
-                # song = AudioSegment.from_mp3("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
-                # start = random.randrange(0, int(new_songs[curr_char]["songLength"] * 1000) - 21000)
-                # end = start + 20000
-                # cut_song = song[start:end] 
-                # cut_song.export("./out/Audio/{}".format(new_songs[curr_char]["audio"]), format="mp3", bitrate="128k")
-                # os.remove("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
-
                 question = ET.Element("question")
                 question.set("price", "1")
                 
@@ -367,6 +353,8 @@ def gen():
 
                 tempQuestions += 1
 
+                debug_log('добавлено в пак: {0}'.format(str(new_songs[curr_char]['annSongId'])))
+                
                 curr_char += 1
             theme.append(questions)
             
@@ -383,6 +371,8 @@ def gen():
     root.append(rounds)
 
     def download(song_s):
+        debug_log('скачиваем: {0}'.format(str(song_s['annSongId'])))
+
         out_file = Path("./out/Audio/sw_{}".format(song_s["audio"])).expanduser()
         response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(song_s["audio"]))
         # response.raise_for_status()
@@ -397,13 +387,17 @@ def gen():
         cut_song.export("./out/Audio/{}".format(song_s["audio"]), format="mp3", bitrate="128k")
         os.remove("./out/Audio/sw_{}".format(song_s["audio"]))
 
-    with ThreadPoolExecutor(max_workers=16) as executor:
+        debug_log('скачано: {0}'.format(str(song_s['annSongId'])))
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
         executor.map(download, new_songs)
     
     tree = ET.ElementTree(root)
     tree.write('./out/content.xml', encoding="utf-8", xml_declaration=True)
     
     shutil.copy2('./example/example.siq', './build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name))
+    
+    debug_log('сохраняем пак')
     
     for folder_name, subfolders, filenames in os.walk(folder):
         for filename in filenames:
