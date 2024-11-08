@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 from pathlib import Path
 from pydub import AudioSegment
+from concurrent.futures import ThreadPoolExecutor
 
 headers = {
     'Content-Type': 'application/json',
@@ -49,51 +50,6 @@ def gen():
             print(mess)
 
     debug_log('настроечки подгружены, дебаг лог включооон')
-
-    # settings = {
-    #     "gen_type": "mal_user",
-    #     "malName": "AmqPsih",
-    #     "lists": {
-    #         "ptw": False,
-    #         "watching": True,
-    #         "completed": True,
-    #         "onhold": False,
-    #         "dropped": False,
-    #     },
-
-    #     "rounds": 3,
-    #     "themes": 6,
-    #     "questions": 6,
-    #     # "rounds": 1,
-    #     # "themes": 2,
-    #     # "questions": 2,
-
-    #     "animeTypes": {
-    #         "tv": True,
-    #         "movie": True,
-    #         "ova": True,
-    #         "ona": True,
-    #         "special": False
-    #     },
-
-    #     "openings": {
-    #         "include": True,
-    #         "count": 80,
-    #     },
-    #     "endings": {
-    #         "include": True,
-    #         "count": 28,
-    #     },
-    #     "inserts": {
-    #         "include": False,
-    #         "count": 10,
-    #     },
-        
-    #     "difficulty": {
-    #         "min": 50,
-    #         "max": 100,
-    #     }
-    # }
 
     offset = 0
     animes_ids = []
@@ -215,34 +171,10 @@ def gen():
     for i in range(len(songs) - 1):
         debug_log('смотрим: {0} / всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
 
-        if len(new_songs) > settings['rounds'] * settings['themes'] * settings['questions']:
+        if len(new_songs) > (settings['rounds'] * settings['themes'] * settings['questions']):
             debug_log('сонг: {0} - стал последним в списке'.format(str(songs[i]['annSongId'])))
             break
 
-        # if songs[i]["songDifficulty"] == None:
-        #     debug_log('сонг: {0} - нет сложности, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-
-        # if songs[i]["audio"] == None:
-        #     debug_log('сонг: {0} - нет аудио, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-
-        # if not (songs[i]["songDifficulty"] >= settings["difficulty"]["min"] and songs[i]["songDifficulty"] <= settings["difficulty"]["max"]):
-        #     debug_log('сонг: {0} - не подходит по сложности, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-        
-        # if songs[i]["songType"].split(" ")[0] == "Opening" and not settings["openings"]["include"]:
-        #     debug_log('сонг: {0} - опенинги не включены в список, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-            
-        # if songs[i]["songType"].split(" ")[0] == "Ending" and not settings["endings"]["include"]:
-        #     debug_log('сонг: {0} - эндинги не включены в список, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-        
-        # if songs[i]["songType"].split(" ")[0] == "Insert" and not settings["inserts"]["include"]:
-        #     debug_log('сонг: {0} - инсерты не включены в список, скип'.format(str(songs[i]['annSongId'])))
-        #     continue
-            
         if len(new_songs) > 0:
             match songs[i]["songType"].split(" ")[0]:
                 case "Opening":
@@ -263,30 +195,6 @@ def gen():
                 case _:
                     continue
 
-        #     match songs[i]["animeType"]:
-        #         case "TV":
-        #             if not settings["animeTypes"]["tv"]:
-        #                 debug_log('сонг: {0} - тв не включен в список, скип'.format(str(songs[i]['annSongId'])))
-        #                 continue
-        #         case "Movie":
-        #             if not settings["animeTypes"]["movie"]:
-        #                 debug_log('сонг: {0} - фильмы не включены в список, скип'.format(str(songs[i]['annSongId'])))
-        #                 continue
-        #         case "OVA":
-        #             if not settings["animeTypes"]["ova"]:
-        #                 debug_log('сонг: {0} - ова не включен в список, скип'.format(str(songs[i]['annSongId'])))
-        #                 continue
-        #         case "ONA":
-        #             if not settings["animeTypes"]["ona"]:
-        #                 debug_log('сонг: {0} - она не включен в список, скип'.format(str(songs[i]['annSongId'])))
-        #                 continue
-        #         case "Special":
-        #             if not settings["animeTypes"]["special"]:
-        #                 debug_log('сонг: {0} - спешл не включен в список, скип'.format(str(songs[i]['annSongId'])))
-        #                 continue
-        #         case _:
-        #             continue
-            
         s_song_has = False
         for s_song in range(len(new_songs)):
             if songs[i]["annId"] == new_songs[s_song]["annId"]:
@@ -318,7 +226,7 @@ def gen():
             json={"query": query},
             headers=headers
         )
-        response.raise_for_status()
+        # response.raise_for_status()
         res = json.loads(response.content)
         shiki_anime = res['data']['animes'][0]
         if shiki_anime['franchise'] in franchises:
@@ -398,19 +306,19 @@ def gen():
                 if curr_char > len(new_songs) - 1: 
                     break
                 
-                out_file = Path("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"])).expanduser()
-                response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(new_songs[curr_char]["audio"]))
-                response.raise_for_status()
-                # if response.status_code == 200:
-                with open(out_file, "wb") as fout:
-                    fout.write(response.content)
+                # out_file = Path("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"])).expanduser()
+                # response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(new_songs[curr_char]["audio"]))
+                # # response.raise_for_status()
+                # # if response.status_code == 200:
+                # with open(out_file, "wb") as fout:
+                #     fout.write(response.content)
                     
-                song = AudioSegment.from_mp3("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
-                start = random.randrange(0, int(new_songs[curr_char]["songLength"] * 1000) - 21000)
-                end = start + 20000
-                cut_song = song[start:end] 
-                cut_song.export("./out/Audio/{}".format(new_songs[curr_char]["audio"]), format="mp3", bitrate="128k")
-                os.remove("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
+                # song = AudioSegment.from_mp3("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
+                # start = random.randrange(0, int(new_songs[curr_char]["songLength"] * 1000) - 21000)
+                # end = start + 20000
+                # cut_song = song[start:end] 
+                # cut_song.export("./out/Audio/{}".format(new_songs[curr_char]["audio"]), format="mp3", bitrate="128k")
+                # os.remove("./out/Audio/sw_{}".format(new_songs[curr_char]["audio"]))
 
                 question = ET.Element("question")
                 question.set("price", "1")
@@ -473,6 +381,24 @@ def gen():
         tempRounds += 1
     
     root.append(rounds)
+
+    def download(song_s):
+        out_file = Path("./out/Audio/sw_{}".format(song_s["audio"])).expanduser()
+        response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(song_s["audio"]))
+        # response.raise_for_status()
+        # if response.status_code == 200:
+        with open(out_file, "wb") as fout:
+            fout.write(response.content)
+            
+        song = AudioSegment.from_mp3("./out/Audio/sw_{}".format(song_s["audio"]))
+        start = random.randrange(0, int(song_s["songLength"] * 1000) - 21000)
+        end = start + 20000
+        cut_song = song[start:end] 
+        cut_song.export("./out/Audio/{}".format(song_s["audio"]), format="mp3", bitrate="128k")
+        os.remove("./out/Audio/sw_{}".format(song_s["audio"]))
+
+    with ThreadPoolExecutor(max_workers=16) as executor:
+        executor.map(download, new_songs)
     
     tree = ET.ElementTree(root)
     tree.write('./out/content.xml', encoding="utf-8", xml_declaration=True)
