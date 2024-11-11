@@ -17,7 +17,7 @@ with open('./popular_animes/popular_animes.txt') as file:
 del popular_animes[0]
 del popular_animes[-1]
 
-for i in range(50):
+for i in range(500):
     random.shuffle(popular_animes)
 
 # 
@@ -145,7 +145,7 @@ def gen(settings):
     debug_log('Сонги подгружены')
 
     debug_log('Шафлим сонги')
-    for j in range(20):
+    for j in range(500):
         random.shuffle(songs)
     debug_log('Шафл завершен.')
         
