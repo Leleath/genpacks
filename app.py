@@ -113,6 +113,16 @@ def gen(settings):
                 debug_log('Сонг: {0} - Нет аудио, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
+            if response[res_song]["isDub"]:
+                if settings['dub']:
+                    debug_log('Сонг: {0} - Дубляж не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
+                    continue
+
+            if response[res_song]["isRebroadcast"]:
+                if settings['rebroadcast']:
+                    debug_log('Сонг: {0} - Реброадкаст не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
+                    continue
+
             if not (response[res_song]["songDifficulty"] >= settings["difficulty"]["min"] and response[res_song]["songDifficulty"] <= settings["difficulty"]["max"]):
                 debug_log('Сонг: {0} - Не подходит по сложности, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
