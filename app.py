@@ -50,12 +50,13 @@ def get_reduct_type(type):
         return "INS"
 
 def gen(settings):
-    debug_log('настроечки подгружены, дебаг лог включооон')
+    print('Настройки подгружены')
+    debug_log('Лог включен')
 
     offset = 0
     animes_ids = []
     
-    debug_log('начинаем пиздить анимки с майанимелиста')
+    debug_log('Подгружаем аниме из MyAnimeList')
 
     while True:
         res = requests.get('https://myanimelist.net/animelist/{0}/load.json?offset={1}&status=7'.format(settings["malName"], offset))
@@ -84,15 +85,15 @@ def gen(settings):
 
             animes_ids.append(response[i]["anime_id"])
             
-        debug_log('готова проходка: {0} / анимок: {1}'.format(str(offset), str(len(animes_ids))))
+        debug_log('Цикл: {0} / Всего аниме: {1}'.format(str(offset), str(len(animes_ids))))
 
         offset += 300
     
-    debug_log('анимки подгружены')
+    debug_log('Аниме подгружены')
     
     songs = []
 
-    debug_log('получаем сонги')
+    debug_log('Получаем сонги')
 
     for i in range(0, len(animes_ids), 300):
         send_data = {
@@ -105,75 +106,75 @@ def gen(settings):
         
         for res_song in range(len(response)):
             if response[res_song]["songDifficulty"] == None:
-                debug_log('сонг: {0} - нет сложности, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Нет сложности, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
             if response[res_song]["audio"] == None:
-                debug_log('сонг: {0} - нет аудио, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Нет аудио, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
             if not (response[res_song]["songDifficulty"] >= settings["difficulty"]["min"] and response[res_song]["songDifficulty"] <= settings["difficulty"]["max"]):
-                debug_log('сонг: {0} - не подходит по сложности, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Не подходит по сложности, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
             if response[res_song]["songType"].split(" ")[0] == "Opening" and not settings["openings"]["include"]:
-                debug_log('сонг: {0} - опенинги не включены в список, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Опенинги не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
                 
             if response[res_song]["songType"].split(" ")[0] == "Ending" and not settings["endings"]["include"]:
-                debug_log('сонг: {0} - эндинги не включены в список, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Эндинги не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
             
             if response[res_song]["songType"].split(" ")[0] == "Insert" and not settings["inserts"]["include"]:
-                debug_log('сонг: {0} - инсерты не включены в список, скип'.format(str(response[res_song]['annSongId'])))
+                debug_log('Сонг: {0} - Инсерты не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
             match response[res_song]["animeType"]:
                 case "TV":
                     if not settings["animeTypes"]["tv"]:
-                        debug_log('сонг: {0} - тв не включен в список, скип'.format(str(response[res_song]['annSongId'])))
+                        debug_log('Сонг: {0} - TV не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                         continue
                 case "Movie":
                     if not settings["animeTypes"]["movie"]:
-                        debug_log('сонг: {0} - фильмы не включены в список, скип'.format(str(response[res_song]['annSongId'])))
+                        debug_log('Сонг: {0} - Фильмы не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                         continue
                 case "OVA":
                     if not settings["animeTypes"]["ova"]:
-                        debug_log('сонг: {0} - ова не включен в список, скип'.format(str(response[res_song]['annSongId'])))
+                        debug_log('Сонг: {0} - OVA не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                         continue
                 case "ONA":
                     if not settings["animeTypes"]["ona"]:
-                        debug_log('сонг: {0} - она не включен в список, скип'.format(str(response[res_song]['annSongId'])))
+                        debug_log('Сонг: {0} - ONA не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                         continue
                 case "Special":
                     if not settings["animeTypes"]["special"]:
-                        debug_log('сонг: {0} - спешл не включен в список, скип'.format(str(response[res_song]['annSongId'])))
+                        debug_log('Сонг: {0} - Спешлы не включены в список, пропускаем'.format(str(response[res_song]['annSongId'])))
                         continue
                 case _:
                     continue
             
             songs.append(response[res_song])
             
-        debug_log('готова проходка: {0} / сонгов: {1}'.format(str(i), str(len(songs))))
+        debug_log('Цикл: {0} / Всего сонгов: {1}'.format(str(i), str(len(songs))))
 
-    debug_log('сонги подгружены')
+    debug_log('Сонги подгружены')
 
-    debug_log('шаффлим ссонги')
-    for j in range(10):
+    debug_log('Шафлим сонги')
+    for j in range(20):
         random.shuffle(songs)
-    debug_log('зашафлено.')
+    debug_log('Шафл завершен.')
 
     new_songs = []
     franchises = []
     loc_fr = []
         
-    debug_log('отбираем только годные опенинги')
+    debug_log('Отбираем сонги')
 
     for i in range(len(songs) - 1):
-        debug_log('смотрим: {0} / всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
+        debug_log('Смотрим: {0} / Всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
 
         if len(new_songs) > (settings['rounds'] * settings['themes'] * settings['questions']):
-            debug_log('сонг: {0} - стал последним в списке, скип'.format(str(songs[i]['annSongId'])))
+            debug_log('Сонг: {0} - Стал последним в списке, пропускаем'.format(str(songs[i]['annSongId'])))
             break
 
         if len(new_songs) > 0:
@@ -181,17 +182,17 @@ def gen(settings):
                 case "Opening":
                     song_types_openings_len = len(list(filter(song_types_openings, new_songs)))
                     if not song_types_openings_len <= settings["openings"]["count"]:
-                        debug_log('сонг: {0} - перебор по опенингам, скип'.format(str(songs[i]['annSongId'])))
+                        debug_log('Сонг: {0} - Перебор по опенингам, пропускаем'.format(str(songs[i]['annSongId'])))
                         continue
                 case "Ending":
                     song_types_endings_len = len(list(filter(song_types_endings, new_songs)))
                     if not song_types_endings_len <= settings["endings"]["count"]:
-                        debug_log('сонг: {0} - перебор по эндингам, скип'.format(str(songs[i]['annSongId'])))
+                        debug_log('Сонг: {0} - Перебор по эндингам, пропускаем'.format(str(songs[i]['annSongId'])))
                         continue
                 case "Insert":
                     song_types_inserts_len = len(list(filter(song_types_inserts, new_songs)))
                     if not song_types_inserts_len <= settings["inserts"]["count"]:
-                        debug_log('сонг: {0} - перебор по инсертам, скип'.format(str(songs[i]['annSongId'])))
+                        debug_log('Сонг: {0} - Перебор по инсертам, пропускаем'.format(str(songs[i]['annSongId'])))
                         continue
                 case _:
                     continue
@@ -204,11 +205,12 @@ def gen(settings):
             if songs[i]["annSongId"] == new_songs[s_song]["annSongId"]:
                 s_song_has = True
                 break
-        if songs[i]["annId"] in loc_fr:
-            debug_log('сонг: {0} - аниме франшиза уже есть, скип'.format(str(songs[i]['annSongId'])))
-            continue
         if s_song_has:
-            debug_log('сонг: {0} - сонг уже есть, скип'.format(str(songs[i]['annSongId'])))
+            debug_log('Сонг: {0} - Сонг уже есть, пропускаем'.format(str(songs[i]['annSongId'])))
+            continue
+
+        if songs[i]["annId"] in loc_fr:
+            debug_log('Сонг: {0} - Аниме франшиза уже есть, пропускаем'.format(str(songs[i]['annSongId'])))
             continue
 
         query = f'''
@@ -232,7 +234,7 @@ def gen(settings):
         res = json.loads(response.content)
         shiki_anime = res['data']['animes'][0]
         if shiki_anime['franchise'] in franchises:
-            debug_log('сонг: {0} - франшиза уже есть, скип'.format(str(songs[i]['annSongId'])))
+            debug_log('Сонг: {0} - Франшиза уже есть, пропускаем'.format(str(songs[i]['annSongId'])))
             continue
 
         franchises.append(shiki_anime['franchise'])
@@ -255,17 +257,17 @@ def gen(settings):
 
                 songs[i]['rand_images'] = rand_images
             else:
-                debug_log('сонг: {0} - у тайтла нет скришотов, скип'.format(str(songs[i]['annSongId'])))
+                debug_log('Сонг: {0} - У тайтла нет скришотов, пропускаем'.format(str(songs[i]['annSongId'])))
                 continue
 
         new_songs.append(songs[i])
         
-        debug_log('отобран: {0}'.format(str(songs[i]['annSongId'])))
+        debug_log('Отобран: {0}'.format(str(songs[i]['annSongId'])))
         time.sleep(0.3)
 
-    debug_log('сонги отобраны, ништяк')
+    debug_log('Сонги отобраны')
 
-    debug_log('собираем пак епта')
+    debug_log('Собираем пак')
 
     openings_count = 0
     endings_count = 0
@@ -385,7 +387,7 @@ def gen(settings):
 
                 tempQuestions += 1
 
-                debug_log('добавлено в пак: {0}'.format(str(new_songs[curr_char]['annSongId'])))
+                debug_log('Добавлено в пак: {0}'.format(str(new_songs[curr_char]['annSongId'])))
                 
                 curr_char += 1
             theme.append(questions)
@@ -403,7 +405,7 @@ def gen(settings):
     root.append(rounds)
 
     def download_song(song_s):
-        debug_log('скачиваем сонг: {0}'.format(str(song_s['annSongId'])))
+        debug_log('Скачиваем сонг: {0}'.format(str(song_s['annSongId'])))
 
         out_file = Path("./temp/Audio/sw_{}".format(song_s["audio"])).expanduser()
         response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(song_s["audio"]))
@@ -417,10 +419,10 @@ def gen(settings):
         cut_song.export("./temp/Audio/{}".format(song_s["audio"]), format="mp3", bitrate="128k")
         os.remove("./temp/Audio/sw_{}".format(song_s["audio"]))
         
-        debug_log('скачан сонг: {0}'.format(str(song_s['annSongId'])))
+        debug_log('Сонг скачан: {0}'.format(str(song_s['annSongId'])))
 
         if settings['images']:
-            debug_log('скачиваем картинку: {0}'.format(str(song_s['annSongId'])))
+            debug_log('Скачиваем скриншоты: {0}'.format(str(song_s['annSongId'])))
 
             img_srcs = []
 
@@ -454,7 +456,7 @@ def gen(settings):
             for img in img_srcs:
                 os.remove(img)
 
-            debug_log('скачана картинка: {0}'.format(str(song_s['annSongId'])))
+            debug_log('Скриншоты собраны: {0}'.format(str(song_s['annSongId'])))
 
     with ThreadPoolExecutor(max_workers=8) as executor:
         executor.map(download_song, new_songs)
@@ -464,7 +466,7 @@ def gen(settings):
     
     shutil.copy2('./example/example.siq', './builds/build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name))
     
-    debug_log('сохраняем пак')
+    debug_log('Сохраняем пак')
     
     for folder_name, subfolders, filenames in os.walk(folder):
         for filename in filenames:
@@ -475,7 +477,7 @@ def gen(settings):
     
     shutil.rmtree('./temp')
     
-    debug_log('все, в пизду, идите играйте')
+    debug_log('Пак собран, можно играть')
 
     return True
 
