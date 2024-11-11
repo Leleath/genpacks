@@ -1,5 +1,5 @@
 import requests
-import json 
+import json
 import shutil
 import os
 import random
@@ -9,6 +9,14 @@ from zipfile import ZipFile
 from pathlib import Path
 from pydub import AudioSegment
 from concurrent.futures import ThreadPoolExecutor
+from PIL import Image
+
+with open('./data.json') as file:
+    sett = json.load(file)
+    
+def debug_log(mess):
+    if sett['log']:
+        print(mess)
 
 headers = {
     'Content-Type': 'application/json',
@@ -41,14 +49,7 @@ def get_reduct_type(type):
     if type == "Insert":
         return "INS"
 
-def gen():
-    with open('./data.json') as file:
-        settings = json.load(file)
-        
-    def debug_log(mess):
-        if settings['log']:
-            print(mess)
-
+def gen(settings):
     debug_log('настроечки подгружены, дебаг лог включооон')
 
     offset = 0
@@ -103,16 +104,16 @@ def gen():
         response = json.loads(res.text)
         
         for res_song in range(len(response)):
-            if response[i]["songDifficulty"] == None:
-                debug_log('сонг: {0} - нет сложности, скип'.format(str(response[i]['annSongId'])))
+            if response[res_song]["songDifficulty"] == None:
+                debug_log('сонг: {0} - нет сложности, скип'.format(str(response[res_song]['annSongId'])))
                 continue
 
-            if response[i]["audio"] == None:
-                debug_log('сонг: {0} - нет аудио, скип'.format(str(response[i]['annSongId'])))
+            if response[res_song]["audio"] == None:
+                debug_log('сонг: {0} - нет аудио, скип'.format(str(response[res_song]['annSongId'])))
                 continue
 
-            if not (response[i]["songDifficulty"] >= settings["difficulty"]["min"] and response[i]["songDifficulty"] <= settings["difficulty"]["max"]):
-                debug_log('сонг: {0} - не подходит по сложности, скип'.format(str(response[i]['annSongId'])))
+            if not (response[res_song]["songDifficulty"] >= settings["difficulty"]["min"] and response[res_song]["songDifficulty"] <= settings["difficulty"]["max"]):
+                debug_log('сонг: {0} - не подходит по сложности, скип'.format(str(response[res_song]['annSongId'])))
                 continue
 
             if response[res_song]["songType"].split(" ")[0] == "Opening" and not settings["openings"]["include"]:
@@ -172,7 +173,7 @@ def gen():
         debug_log('смотрим: {0} / всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
 
         if len(new_songs) > (settings['rounds'] * settings['themes'] * settings['questions']):
-            debug_log('сонг: {0} - стал последним в списке'.format(str(songs[i]['annSongId'])))
+            debug_log('сонг: {0} - стал последним в списке, скип'.format(str(songs[i]['annSongId'])))
             break
 
         if len(new_songs) > 0:
@@ -218,6 +219,8 @@ def gen():
                     name
                     russian
                     franchise
+                    
+                    screenshots {{ id originalUrl x166Url x332Url }}
                 }}
             }}
         '''
@@ -226,7 +229,6 @@ def gen():
             json={"query": query},
             headers=headers
         )
-        # response.raise_for_status()
         res = json.loads(response.content)
         shiki_anime = res['data']['animes'][0]
         if shiki_anime['franchise'] in franchises:
@@ -236,6 +238,26 @@ def gen():
         franchises.append(shiki_anime['franchise'])
         loc_fr.append(songs[i]['annId'])
         songs[i]['russian'] = shiki_anime['russian']
+        
+        if settings['images']:
+            if len(shiki_anime['screenshots']) > 4:
+                rand_images = []
+                while not len(rand_images) == 4:
+                    rand_image_range = random.randrange(len(shiki_anime['screenshots']))
+
+                    new_img = {
+                        "index": rand_image_range,
+                        "src": shiki_anime['screenshots'][rand_image_range]['originalUrl']
+                    }
+
+                    if not (new_img in rand_images):
+                        rand_images.append(new_img)
+
+                songs[i]['rand_images'] = rand_images
+            else:
+                debug_log('сонг: {0} - у тайтла нет скришотов, скип'.format(str(songs[i]['annSongId'])))
+                continue
+
         new_songs.append(songs[i])
         
         debug_log('отобран: {0}'.format(str(songs[i]['annSongId'])))
@@ -251,12 +273,13 @@ def gen():
 
     curr_char = 0
     f_name = random.random()
-    os.makedirs("./out")
-    os.makedirs("./out/Audio")
-    os.makedirs("./build_{0}_{1}".format(settings['malName'], f_name))
+    os.makedirs("./temp")
+    os.makedirs("./temp/Audio")
+    os.makedirs("./temp/Images")
+    os.makedirs("./builds/build_{0}_{1}".format(settings['malName'], f_name))
     
-    z = ZipFile('./build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name), "w")
-    folder = "./out"
+    z = ZipFile('./builds/build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name), "w")
+    folder = "./temp"
     
     root = ET.Element('package')
     root.set("name", "SiGame Anime Pack")
@@ -322,15 +345,26 @@ def gen():
                 item2 = ET.Element("item")
                 item2.set("type", "audio")
                 item2.set("isRef", "True")
-                item2.set("placement", "background")
+                item2.set("placement", "background") 
+                if settings['images']:
+                    item2.set("duration", "00:00:13")
+                else:
+                    item2.set("duration", "00:00:15")
                 item2.text = new_songs[curr_char]["audio"]
                 param.append(item2)
+                
+                if settings['images']:
+                    item3 = ET.Element("item")
+                    item3.set("type", "image")
+                    item3.set("isRef", "True")
+                    item3.set("duration", "00:00:02")
+                    item3.text = str(new_songs[curr_char]["annId"]) + ".jpg"
+                    param.append(item3)
                 
                 params.append(param)
                 
                 right = ET.Element("right")
                 answer = ET.Element("answer")
-                # answer.text = shiki_anime['russian'] + " - " + data[curr_char]["animeJPName"] + " (" + data[curr_char]["animeCategory"] + ") - (" + data[curr_char]["songType"] + ") - (" + str(int(data[curr_char]["songDifficulty"])) + ") - (" + data[curr_char]["songArtist"] + " - " + data[curr_char]["songName"] + ")"
                 answer.text = new_songs[curr_char]['russian'] + " - " + new_songs[curr_char]["animeJPName"] + " (" + new_songs[curr_char]["animeCategory"] + ") - (" + new_songs[curr_char]["songType"] + ") - (" + str(int(new_songs[curr_char]["songDifficulty"])) + ") - (" + new_songs[curr_char]["songArtist"] + " - " + new_songs[curr_char]["songName"] + ")"
                 right.append(answer)
                 
@@ -338,8 +372,6 @@ def gen():
                 question.append(right)
                 
                 questions.append(question)
-
-                # franchises.append(shiki_anime['franchise'])
 
                 match new_songs[curr_char]["songType"].split(" ")[0]:
                     case "Opening":
@@ -370,32 +402,67 @@ def gen():
     
     root.append(rounds)
 
-    def download(song_s):
-        debug_log('скачиваем: {0}'.format(str(song_s['annSongId'])))
+    def download_song(song_s):
+        debug_log('скачиваем сонг: {0}'.format(str(song_s['annSongId'])))
 
-        out_file = Path("./out/Audio/sw_{}".format(song_s["audio"])).expanduser()
+        out_file = Path("./temp/Audio/sw_{}".format(song_s["audio"])).expanduser()
         response = requests.request("GET", "https://naedist.animemusicquiz.com/{}".format(song_s["audio"]))
-        # response.raise_for_status()
-        # if response.status_code == 200:
         with open(out_file, "wb") as fout:
             fout.write(response.content)
             
-        song = AudioSegment.from_mp3("./out/Audio/sw_{}".format(song_s["audio"]))
-        start = random.randrange(0, int(song_s["songLength"] * 1000) - 21000)
-        end = start + 20000
+        song = AudioSegment.from_mp3("./temp/Audio/sw_{}".format(song_s["audio"]))
+        start = random.randrange(0, int(song_s["songLength"] * 1000) - ((settings["cut_audio"] * 1000) + 1))
+        end = start + (settings["cut_audio"] * 1000)
         cut_song = song[start:end] 
-        cut_song.export("./out/Audio/{}".format(song_s["audio"]), format="mp3", bitrate="128k")
-        os.remove("./out/Audio/sw_{}".format(song_s["audio"]))
+        cut_song.export("./temp/Audio/{}".format(song_s["audio"]), format="mp3", bitrate="128k")
+        os.remove("./temp/Audio/sw_{}".format(song_s["audio"]))
+        
+        debug_log('скачан сонг: {0}'.format(str(song_s['annSongId'])))
 
-        debug_log('скачано: {0}'.format(str(song_s['annSongId'])))
+        if settings['images']:
+            debug_log('скачиваем картинку: {0}'.format(str(song_s['annSongId'])))
+
+            img_srcs = []
+
+            for img_index in range(len(song_s["rand_images"])):
+                new_src = "./temp/Images/{0}_{1}".format(str(img_index), str(song_s["annId"]) + ".jpg")
+
+                out_file = Path(new_src).expanduser()
+                response = requests.request("GET", song_s["rand_images"][img_index]['src'])
+                with open(out_file, "wb") as fout:
+                    fout.write(response.content)
+
+                img_srcs.append(new_src)
+
+            img1 = Image.open(img_srcs[0])
+            img2 = Image.open(img_srcs[1])
+            img3 = Image.open(img_srcs[2])
+            img4 = Image.open(img_srcs[3])
+
+            dst = Image.new('RGB', (img1.width * 2, img1.height * 2))
+
+            dst.paste(img1, (0, 0))
+            dst.paste(img2, (img1.width, 0))
+            dst.paste(img3, (0, img1.height))
+            dst.paste(img4, (img1.width, img1.height))
+
+            newsize = (1920, 1080)
+            dst.resize(newsize)
+            
+            dst.save("./temp/Images/{}".format(str(song_s["annId"]) + ".jpg"))
+
+            for img in img_srcs:
+                os.remove(img)
+
+            debug_log('скачана картинка: {0}'.format(str(song_s['annSongId'])))
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        executor.map(download, new_songs)
-    
+        executor.map(download_song, new_songs)
+
     tree = ET.ElementTree(root)
-    tree.write('./out/content.xml', encoding="utf-8", xml_declaration=True)
+    tree.write('./temp/content.xml', encoding="utf-8", xml_declaration=True)
     
-    shutil.copy2('./example/example.siq', './build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name))
+    shutil.copy2('./example/example.siq', './builds/build_{0}_{1}/sigame.siq'.format(settings['malName'], f_name))
     
     debug_log('сохраняем пак')
     
@@ -406,8 +473,10 @@ def gen():
     
     z.close()
     
-    shutil.rmtree('./out')
+    shutil.rmtree('./temp')
     
     debug_log('все, в пизду, идите играйте')
 
-gen()
+    return True
+
+gen(sett)

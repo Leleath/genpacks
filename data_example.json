@@ -1,0 +1,44 @@
+{
+    "log": true,
+    "malName": "Username",
+    "lists": {
+        "ptw": false,
+        "watching": true,
+        "completed": true,
+        "onhold": false,
+        "dropped": false
+    },
+
+    "rounds": 3,
+    "themes": 6,
+    "questions": 6,
+
+    "animeTypes": {
+        "tv": true,
+        "movie": true,
+        "ova": true,
+        "ona": true,
+        "special": false
+    },
+
+    "openings": {
+        "include": true,
+        "count": 108
+    },
+    "endings": {
+        "include": false,
+        "count": 28
+    },
+    "inserts": {
+        "include": false,
+        "count": 10
+    },
+    
+    "difficulty": {
+        "min": 25,
+        "max": 60
+    },
+    
+    "images": false,
+    "cut_audio": 20
+}

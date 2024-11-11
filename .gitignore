@@ -1,3 +1,11 @@
 ﻿packs/
 backup/
 data.json
+builds/
+temp/
+
+# 
+__pycache__/
+
+# потом уберу
+prog.py
