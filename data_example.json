@@ -1,6 +1,7 @@
 {
     "log": true,
-    "malName": "Username",
+    "malName": "AmqPsih",
+
     "lists": {
         "ptw": false,
         "watching": true,
@@ -9,9 +10,9 @@
         "dropped": false
     },
 
-    "rounds": 3,
-    "themes": 6,
-    "questions": 6,
+    "rounds": 1,
+    "themes": 2,
+    "questions": 2,
 
     "animeTypes": {
         "tv": true,
@@ -35,10 +36,13 @@
     },
     
     "difficulty": {
-        "min": 25,
-        "max": 60
+        "min": 45,
+        "max": 100
     },
     
-    "images": false,
-    "cut_audio": 20
+    "images": true,
+    "cut_audio": 20,
+    
+    "dub": false,
+    "rebroadcast": false
 }
