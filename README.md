@@ -4,8 +4,6 @@
 
 *idk*
 
-Переименуйте файл data_example.json в data.json !
-
 Дополнительные библиотеки:  
 ```
 requests
@@ -16,6 +14,9 @@ concurrent.futures
 PIL
 ```
 
+Переименуйте файл data_example.json в data.json !
+
+data.json:
 ```python
 {
     "log": True, # Вести лог в консоль
