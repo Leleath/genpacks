@@ -68,7 +68,7 @@ def gen(settings):
     
     songs = []
 
-    for i in range(0, 3000, 300):
+    for i in range(0, 5000, 300):
         send_data = {
             "malIds": popular_animes[i:i+300],
         }
