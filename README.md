@@ -6,19 +6,15 @@
 
 Переименуйте файл data_example.json в data.json !
 
-Дополнительные библиотеки:
-
+Дополнительные библиотеки:  
+```
 requests
-
 shutil
-
 zipfile
-
 pydub
-
 concurrent.futures
-
 PIL
+```
 
 ```python
 {
