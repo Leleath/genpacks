@@ -44,5 +44,7 @@
     "cut_audio": 20,
     
     "dub": false,
-    "rebroadcast": false
+    "rebroadcast": false,
+
+    "artists_uniq": false
 }

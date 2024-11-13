@@ -17,10 +17,24 @@ with open('./popular_animes/popular_animes.txt') as file:
 del popular_animes[0]
 del popular_animes[-1]
 
-for i in range(500):
-    random.shuffle(popular_animes)
+popular_animes = list(map(int, popular_animes))
 
-# 
+def shuffle_songs(data):
+    new_data = data
+
+    for i in range(len(new_data)):
+        random_index = random.randrange(len(new_data))
+
+        temp = new_data[i]
+        new_data[i] = new_data[random_index]
+        new_data[random_index] = temp
+    
+    return new_data
+
+for i in range(100):
+    popular_animes = shuffle_songs(popular_animes)
+
+# random.shuffle(popular_animes)
 
 with open('./data.json') as file:
     sett = json.load(file)
@@ -76,7 +90,7 @@ def gen(settings):
         res = requests.post('https://anisongdb.com/api/malIDs_request', json=send_data)
 
         response = json.loads(res.text)
-        
+
         for res_song in range(len(response)):
             if response[res_song]["songDifficulty"] == None:
                 debug_log('Сонг: {0} - Нет сложности, пропускаем'.format(str(response[res_song]['annSongId'])))
@@ -86,12 +100,15 @@ def gen(settings):
                 debug_log('Сонг: {0} - Нет аудио, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
-            if response[res_song]["isDub"]:
+            if response[res_song]["animeJPName"] == None or response[res_song]["animeCategory"] == None or response[res_song]["songType"] == None or response[res_song]["songArtist"] == None or response[res_song]["songName"] == None:
+                debug_log('Сонг: {0} - Какая то ошибка, скип'.format(str(response[res_song]['annSongId'])))
+
+            if response[res_song]["isDub"] == 1:
                 if settings['dub']:
                     debug_log('Сонг: {0} - Дубляж не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
                     continue
 
-            if response[res_song]["isRebroadcast"]:
+            if response[res_song]["isRebroadcast"] == 1:
                 if settings['rebroadcast']:
                     debug_log('Сонг: {0} - Реброадкаст не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
                     continue
@@ -140,13 +157,17 @@ def gen(settings):
             
         debug_log('Цикл: {0} / Всего сонгов: {1}'.format(str(i), str(len(songs))))
         
-        time.sleep(0.3)
+        time.sleep(0.4)
 
     debug_log('Сонги подгружены')
 
     debug_log('Шафлим сонги')
-    for j in range(500):
-        random.shuffle(songs)
+    
+    # random.shuffle(songs)
+    
+    for i in range(100):
+        songs = shuffle_songs(songs)
+
     debug_log('Шафл завершен.')
         
     debug_log('Отбираем сонги')
@@ -154,6 +175,7 @@ def gen(settings):
     new_songs = []
     franchises = []
     loc_fr = []
+    artists = []
 
     for i in range(len(songs) - 1):
         debug_log('Смотрим: {0} / Всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
@@ -161,6 +183,16 @@ def gen(settings):
         if len(new_songs) > (settings['rounds'] * settings['themes'] * settings['questions']):
             debug_log('Сонг: {0} - Стал последним в списке, пропускаем'.format(str(songs[i]['annSongId'])))
             break
+
+        if settings['artists_uniq']:
+            artist_has = False
+            for j in songs[i]['artists']:
+                if songs[i]['artists'][j]['id'] in artists:
+                    artist_has = True
+                else:
+                    artists.append(songs[i]['artists'][j]['id'])    
+            if artist_has:
+                continue
 
         if len(new_songs) > 0:
             match songs[i]["songType"].split(" ")[0]:
@@ -224,7 +256,12 @@ def gen(settings):
 
         franchises.append(shiki_anime['franchise'])
         loc_fr.append(songs[i]['annId'])
-        songs[i]['russian'] = shiki_anime['russian']
+
+        if shiki_anime['russian'] == None:
+            songs[i]['russian'] = songs[i]['animeENName']
+        else:
+            songs[i]['russian'] = shiki_anime['russian']
+
         
         if settings['images']:
             if len(shiki_anime['screenshots']) > 4:
