@@ -3,6 +3,7 @@ backup/
 data.json
 builds/
 temp/
-
+app_pics.py
+app_random.py
 # 
 __pycache__/

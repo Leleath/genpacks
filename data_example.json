@@ -10,9 +10,9 @@
         "dropped": false
     },
 
-    "rounds": 1,
-    "themes": 2,
-    "questions": 2,
+    "rounds": 3,
+    "themes": 6,
+    "questions": 6,
 
     "animeTypes": {
         "tv": true,

@@ -12,10 +12,10 @@ from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
 
 with open('./data.json') as file:
-    sett = json.load(file)
+    settings = json.load(file)
     
 def debug_log(mess):
-    if sett['log']:
+    if settings['log']:
         print(mess)
 
 headers = {
@@ -24,6 +24,18 @@ headers = {
     'Accept-Encoding': 'gzip, deflate, br',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36'
 }
+
+def shuffle_songs(data):
+    new_data = data
+
+    for i in range(len(new_data)):
+        random_index = random.randrange(len(new_data))
+
+        temp = new_data[i]
+        new_data[i] = new_data[random_index]
+        new_data[random_index] = temp
+    
+    return new_data
 
 def song_types_openings(song):
     if song["songType"].split(" ")[0] == "Opening":
@@ -49,14 +61,11 @@ def get_reduct_type(type):
     if type == "Insert":
         return "INS"
 
-def gen(settings):
-    print('Настройки подгружены')
-    debug_log('Лог включен')
+def get_mal_user_animes_ids():
+    debug_log('Подгружаем аниме из MyAnimeList')
 
     offset = 0
     animes_ids = []
-    
-    debug_log('Подгружаем аниме из MyAnimeList')
 
     while True:
         res = requests.get('https://myanimelist.net/animelist/{0}/load.json?offset={1}&status=7'.format(settings["malName"], offset))
@@ -88,12 +97,29 @@ def gen(settings):
         debug_log('Цикл: {0} / Всего аниме: {1}'.format(str(offset), str(len(animes_ids))))
 
         offset += 300
-    
-    debug_log('Аниме подгружены')
-    
-    songs = []
 
+    debug_log('Аниме подгружены')
+
+    return animes_ids
+
+def get_random_animes_ids(popular_animes):
+    with open('./popular_animes/popular_animes.txt') as file:
+        popular_animes = file.read().split('\n')
+
+    del popular_animes[0]
+    del popular_animes[-1]
+
+    popular_animes = list(map(int, popular_animes))
+
+    for i in range(100):
+        popular_animes = shuffle_songs(popular_animes)
+
+    return popular_animes
+
+def get_songs_from_anisong(animes_ids):
     debug_log('Получаем сонги')
+
+    songs = []
 
     for i in range(0, len(animes_ids), 300):
         send_data = {
@@ -113,12 +139,12 @@ def gen(settings):
                 debug_log('Сонг: {0} - Нет аудио, пропускаем'.format(str(response[res_song]['annSongId'])))
                 continue
 
-            if response[res_song]["isDub"]:
+            if response[res_song]["isDub"] == 1:
                 if settings['dub']:
                     debug_log('Сонг: {0} - Дубляж не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
                     continue
 
-            if response[res_song]["isRebroadcast"]:
+            if response[res_song]["isRebroadcast"] == 1:
                 if settings['rebroadcast']:
                     debug_log('Сонг: {0} - Реброадкаст не включен, пропускаем'.format(str(response[res_song]['annSongId'])))
                     continue
@@ -169,16 +195,14 @@ def gen(settings):
 
     debug_log('Сонги подгружены')
 
-    debug_log('Шафлим сонги')
-    for j in range(20):
-        random.shuffle(songs)
-    debug_log('Шафл завершен.')
+    return songs
 
+def get_selected_songs(songs):
+    debug_log('Отбираем сонги')
+    
     new_songs = []
     franchises = []
     loc_fr = []
-        
-    debug_log('Отбираем сонги')
 
     for i in range(len(songs) - 1):
         debug_log('Смотрим: {0} / Всего сонгов: {1}'.format(str(songs[i]['annSongId']), str(len(new_songs))))
@@ -276,6 +300,28 @@ def gen(settings):
         time.sleep(0.3)
 
     debug_log('Сонги отобраны')
+
+    return new_songs
+
+def gen():
+    print('Настройки подгружены')
+
+    debug_log('Лог включен')
+
+    if settings["random"]:
+        animes_ids = get_random_animes_ids()
+    else:
+        animes_ids = get_mal_user_animes_ids()
+    
+    songs = get_songs_from_anisong(animes_ids)
+    songs = []
+
+    debug_log('Шафлим сонги')
+    for j in range(20):
+        songs = shuffle_songs(songs)
+    debug_log('Шафл завершен.')
+
+    new_songs = get_selected_songs(songs)
 
     debug_log('Собираем пак')
 
@@ -491,4 +537,4 @@ def gen(settings):
 
     return True
 
-gen(sett)
+gen()

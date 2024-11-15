@@ -1,6 +1,6 @@
 ﻿## Anime Songs Pack Generator
 
-Перед скачиванием поставьте на комп ffmpeg и добавьте папку bin в переменные среды Path.
+При первой работе запустите setup.py
 
 *idk*
 
@@ -12,6 +12,7 @@ zipfile
 pydub
 concurrent.futures
 PIL
+ffmpeg-python
 ```
 
 Переименуйте файл data_example.json в data.json !
