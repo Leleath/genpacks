@@ -102,17 +102,20 @@ def get_mal_user_animes_ids():
 
     return animes_ids
 
-def get_random_animes_ids(popular_animes):
+def get_random_animes_ids():
     with open('./popular_animes/popular_animes.txt') as file:
         popular_animes = file.read().split('\n')
 
-    del popular_animes[0]
     del popular_animes[-1]
 
     popular_animes = list(map(int, popular_animes))
 
     for i in range(100):
         popular_animes = shuffle_songs(popular_animes)
+
+    x = slice(0, 1500)
+
+    popular_animes = popular_animes[x]
 
     return popular_animes
 
@@ -303,7 +306,7 @@ def get_selected_songs(songs):
 
     return new_songs
 
-def gen():
+def gen(settings):
     print('Настройки подгружены')
 
     debug_log('Лог включен')
@@ -316,12 +319,17 @@ def gen():
     songs = get_songs_from_anisong(animes_ids)
     songs = []
 
-    debug_log('Шафлим сонги')
+    debug_log('Шафлим сонги #1')
     for j in range(20):
         songs = shuffle_songs(songs)
-    debug_log('Шафл завершен.')
+    debug_log('Шафл #1 завершен')
 
     new_songs = get_selected_songs(songs)
+
+    debug_log('Шафлим сонги #2')
+    for j in range(20):
+        new_songs = shuffle_songs(new_songs)
+    debug_log('Шафл #2 завершен')
 
     debug_log('Собираем пак')
 
@@ -537,4 +545,4 @@ def gen():
 
     return True
 
-gen()
+# gen()
